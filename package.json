@@ -1,0 +1,27 @@
+{
+  "name": "server-socket--chat",
+  "version": "1.0.0",
+  "description": "fastify server with socket io",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SvetlanaZinovkina/server-socket--chat.git"
+  },
+  "author": "SZ",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/SvetlanaZinovkina/server-socket--chat/issues"
+  },
+  "homepage": "https://github.com/SvetlanaZinovkina/server-socket--chat#readme",
+  "dependencies": {
+    "@fastify/cors": "^8.5.0",
+    "fastify": "^4.28.1",
+    "fastify-socket.io": "^5.1.0",
+    "nodemon": "^3.1.7",
+    "socket.io": "^4.8.0"
+  }
+}
