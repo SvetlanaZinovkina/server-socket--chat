@@ -1,82 +1,61 @@
 import Fastify from "fastify";
 import fastifyIO from "fastify-socket.io";
-import fastifyCors from '@fastify/cors';
+import fastifyCors from "@fastify/cors";
+import fastifyJwt from "@fastify/jwt";
+import fastifyCookie from "@fastify/cookie";
+import fastifyMultipart from "@fastify/multipart";
+import fastifyFormbody from "@fastify/formbody";
+import dotenv from "dotenv";
+import routes from "./routes/index.js";
+
+dotenv.config();
+
+const PORT = process.env.PORT;
 
 const server = Fastify({
-    logger: true,
-  });
-  server.register(fastifyCors, {
-    origin: (origin, cb) => {
-      cb(null, true); // Разрешаем запросы с любого источника
-    },
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'], // Разрешенные HTTP методы
-  });
-  server.register(fastifyIO, {
-    cors: {
-      origin: 'http://localhost:3000', // Разрешаем запросы с frontend
-      methods: ['GET', 'POST'], // Разрешенные методы для WebSocket
-    },
+  logger: true,
+});
+
+server
+  .register(fastifyJwt, {
+    secret: process.env.JWT_SECRET,
+  })
+  .decorate("authenticate", async (request, reply) => {
+    try {
+      await request.jwtVerify();
+    } catch (err) {
+      reply.code(401).send({ error: "Unauthorized" });
+    }
   });
 
-server.get("/", (req, reply) => {
-  reply.send('Ehf')
+server.register(fastifyCookie);
+server.register(fastifyMultipart);
+server.register(fastifyFormbody);
 
+server.register(fastifyCors, {
+  origin: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+});
+
+server.register(fastifyIO, {
+  cors: {
+    origin: "http://localhost:3000",
+    methods: ["GET", "POST"],
+  },
 });
 
 server.ready().then(() => {
-  // we need to wait for the server to be ready, else `server.io` is undefined
   server.io.on("connection", (socket) => {
-    // console.log("Работает")
-    socket.on('message', (msg) => {
-          console.log('message: ' + msg);
-        });
-        
-        socket.on('disconnect', () => {
-          console.log('user disconnected');
-        });
+    socket.on("message", (msg) => {
+      console.log("message: " + msg);
+    });
+
+    socket.on("disconnect", () => {
+      console.log("user disconnected");
+    });
   });
 });
 
-server.listen({ port: 5001 });
+routes(server);
 
-// import Fastify from 'fastify';
-// import fastifyCors from '@fastify/cors';
-// import socketio from 'socket.io';
-
-// const fastify = Fastify({
-//   logger: true,
-// });
-
-// // Настройка CORS
-// fastify.register(fastifyCors, {
-//   origin: true,
-//   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-// });
-
-// // Маршрут для проверки работы
-// fastify.get('/', async (req, rep) => {
-//   return rep.send('dct работает');
-// });
-
-// // Настройка Socket.io
-
-// const io = socketio(fastify.server);
-
-// io.on('connection', (socket) => {
-//   console.log('a user connected');
-  
-//   // Обработка событий
-//   socket.on('message', (msg) => {
-//     console.log('message: ' + msg);
-//   });
-  
-//   socket.on('disconnect', () => {
-//     console.log('user disconnected');
-//   });
-// });
-
-// fastify.listen(5001, (err) => {
-//   if (err) throw err;
-//   console.log('Server listening on port 5001');
-// });
-// start();
+server.listen({ port: PORT });
