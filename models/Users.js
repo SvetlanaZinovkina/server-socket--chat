@@ -12,31 +12,36 @@ class User {
         throw new Error("User with this email or username already exists");
       }
       const hashedPassword = await bcrypt.hash(password, saltRounds);
-      const [newUser] = await knex("users")
-        .insert({
-          username,
-          email,
-          password_hash: hashedPassword,
-        })
-        .returning("*");
+      const [newUser] = await knex("users").insert({
+        username,
+        email,
+        password_hash: hashedPassword,
+      });
+
       return newUser;
     } catch (e) {
       throw new Error(e);
     }
   }
-  static async findById({ userId }) {
-    return knex("users").where({ user_id: userId }).first();
+  static async findById(userId) {
+    return await knex("users").where({ user_id: userId }).first();
   }
 
-  static async findByEmail({ email }) {
-    return knex("users")
-      .select("user_id", "password_hash", "avatar_path", "role")
-      .where({ email })
-      .first();
+  static async findByEmail(email) {
+    try {
+      const user = await knex("users").where({ email: email }).first();
+      if (!user) {
+        throw new Error("User not found");
+      }
+      return user;
+    } catch (e) {
+      console.error(e);
+      throw new Error(e.message || "Error finding user");
+    }
   }
 
   static async checkPassword({ user, password }) {
-    return bcrypt.compare(password, user.password_hash);
+    return await bcrypt.compare(password, user.password_hash);
   }
   static async getAll() {
     const users = await knex("users").select("user_id", "username");

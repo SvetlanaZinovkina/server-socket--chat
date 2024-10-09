@@ -5,20 +5,28 @@ import User from "../models/Users.js";
 export default (app) => {
   app.post("/api/v1/signup", async (req, reply) => {
     const { username, email, password } = req.body;
-
     try {
-      const newUser = await User.create({ username, email, password });
+      const newUserId = await User.create({ username, email, password });
+      console.log(newUserId);
 
-      const { id: userId } = newUser;
+      const newUser = await User.findById(newUserId);
+      const { username: user, role, avatar_path } = newUser;
       const token = app.jwt.sign({ user: newUser });
+
       reply.setCookie("token", token, {
-        httpOnly: true,
         secure: true,
         sameSite: "Strict",
         path: "/",
       });
 
-      reply.send({ token, userId, message: "User registered successfully" });
+      reply.status(200).send({
+        token,
+        newUserId,
+        user,
+        role,
+        avatar_path,
+        message: "User registered successfully",
+      });
     } catch (err) {
       reply
         .status(500)
@@ -29,18 +37,27 @@ export default (app) => {
   app.post("/api/v1/login", async (req, reply) => {
     const { email, password } = req.body;
     try {
-      const user = await User.findByEmail({ email });
-
+      const user = await User.findByEmail(email);
+      console.log(user);
       if (user && (await bcrypt.compare(password, user.password_hash))) {
         const token = app.jwt.sign({ user });
 
+        const { user_id, username, role, avatar_path } = user;
+
         reply.setCookie("token", token, {
-          httpOnly: true,
           secure: true,
           sameSite: "Strict",
           path: "/",
         });
-        reply.status(200).send({ token, message: "Login successful" });
+
+        reply.status(200).send({
+          user_id,
+          token,
+          username,
+          role,
+          avatar_path,
+          message: "Login successful",
+        });
       } else {
         reply.status(401).send({ error: "Invalid email or password" });
       }
