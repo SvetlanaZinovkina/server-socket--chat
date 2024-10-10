@@ -24,7 +24,10 @@ class User {
     }
   }
   static async findById(userId) {
-    return await knex("users").where({ user_id: userId }).first();
+    return await knex("users")
+      .select("user_id", "username", "email", "avatar_path")
+      .where({ user_id: userId })
+      .first();
   }
 
   static async findByEmail(email) {
@@ -48,6 +51,15 @@ class User {
     return users;
   }
 
+  static async getUsers() {
+    const users = await knex("users").select(
+      "user_id",
+      "username",
+      "avatar_path"
+    );
+    return users;
+  }
+
   static async isAdmin({ userId }) {
     const user = await knex("users")
       .where({ id: Number(userId) })
@@ -55,22 +67,37 @@ class User {
     return user && user.role === "admin";
   }
   static async findByCredentials(email, password) {
-    // Ищем пользователя по username
     const user = await knex("users").where({ email }).first();
 
     if (!user) {
       throw new Error("Неверное имя пользователя или пароль");
     }
 
-    // Сравниваем введенный пароль с хэшированным паролем в базе данных
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
       throw new Error("Неверное имя пользователя или пароль");
     }
 
-    // Если все проверки пройдены, возвращаем пользователя
     return user;
+  }
+
+  static async updateUserName(userId, username) {
+    return await knex("users").where("user_id", userId).update({ username });
+  }
+  static async updateEmail(userId, email) {
+    return await knex("users").where("user_id", userId).update({ email });
+  }
+  static async updatePassword(userId, password) {
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+    return await knex("users")
+      .where("user_id", userId)
+      .update({ password_hash: hashedPassword });
+  }
+  static async updateAvatar(userId, newAvatarPath) {
+    return await knex("users")
+      .where("user_id", userId)
+      .update({ avatar_path: newAvatarPath });
   }
 }
 

@@ -3,11 +3,11 @@ import User from "../models/Users.js";
 
 export default (app) => {
   app.get(
-    "/api/v1/users",
+    "/api/v1/admin/users",
     { preHandler: [app.authenticate] }, // Аутентификация и проверка роли
     async (req, reply) => {
       try {
-        console.log("Decoded Token:", req.user.user);
+        // console.log("Decoded Token:", req.user.user);
         // Получаем role из токена
         const { role } = req.user.user; // Предполагаем, что роль находится в токене
         // Проверяем, является ли пользователь администратором

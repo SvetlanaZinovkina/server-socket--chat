@@ -13,7 +13,7 @@ import routes from "./routes/index.js";
 
 dotenv.config();
 const __dirname = fileURLToPath(path.dirname(import.meta.url));
-const imagesDir = path.join(__dirname, "uploads", "/", "avatars");
+const imagesDir = path.join(__dirname, "uploads", "avatars");
 const PORT = process.env.PORT;
 
 const server = Fastify({
